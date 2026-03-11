@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imperial Gazette – Newsletter Editor</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    @media print {
+
+      .topbar,
+      .sidebar {
+        display: none !important;
+      }
+
+      .app {
+        display: block !important;
+        height: auto !important;
+      }
+
+      .preview-panel {
+        overflow: visible !important;
+        background: white !important;
+        padding: 0 !important;
+      }
+
+      .gazette {
+        max-width: 100% !important;
+        box-shadow: none !important;
+      }
+    }
+
+    :root {
+      --parchment: #f5f0e8;
+      --parchment-dark: #ede5d5;
+      --ink: #1a1208;
+      --ink-light: #2a1e0a;
+      --gold: #b8973a;
+      --gold-light: #d4af5a;
+      --gold-pale: #f0e5c0;
+      --sage: #3d5a3e;
+      --border: #c8b882;
+      --muted: #7a6a4a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #2a2010;
+      font-family: 'EB Garamond', serif;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      grid-template-rows: 52px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      grid-column: 1/-1;
+      background: var(--ink);
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      gap: 14px;
+    }
+
+    .topbar-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 12px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border: 1px solid var(--gold);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--gold-light);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(184, 151, 58, .15);
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background: var(--gold-light);
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--parchment-dark);
+      border-right: 2px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--parchment);
+    }
+
+    .sidebar-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 10px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .sidebar-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .section-group {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-group-header {
+      padding: 9px 18px;
+      font-family: 'Playfair Display', serif;
+      font-size: 9px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: var(--ink);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .section-group-header .chevron {
+      transition: transform .2s;
+    }
+
+    .section-group-header.collapsed .chevron {
+      transform: rotate(-90deg);
+    }
+
+    .section-group-body {
+      padding: 11px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .section-group-body.hidden {
+      display: none;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .field label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .field input,
+    .field textarea {
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      font-family: 'EB Garamond', serif;
+      font-size: 13px;
+      color: var(--ink);
+      padding: 6px 8px;
+      outline: none;
+      resize: vertical;
+      transition: border-color .2s;
+      width: 100%;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--gold);
+    }
+
+    .field textarea {
+      min-height: 58px;
+      line-height: 1.5;
+    }
+
+    .news-item,
+    .highlight-item {
+      border: 1px solid var(--border);
+      background: var(--parchment);
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      margin-bottom: 7px;
+    }
+
+    .item-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: .1em;
+    }
+
+    .news-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .news-remove:hover {
+      color: #8b3a1a;
+    }
+
+    .btn-add {
+      background: none;
+      border: 1px dashed var(--border);
+      color: var(--muted);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 6px;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      transition: all .2s;
+    }
+
+    .btn-add:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* PREVIEW PANEL */
+    .preview-panel {
+      overflow-y: auto;
+      background: #3a2e18;
+      padding: 16px 6px;
+    }
+
+    /* ════════════════════════════════════
+     GAZETTE STYLES
+  ════════════════════════════════════ */
+    .gazette {
+      max-width: 740px;
+      margin: 0 auto;
+      background: var(--parchment);
+      font-family: 'EB Garamond', serif;
+      position: relative;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
+    }
+
+    /* MASTHEAD */
+    .masthead {
+      padding: 20px 38px 0;
+      text-align: center;
+      border-bottom: 3px double var(--border);
+    }
+
+    .masthead-eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 8px;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+
+    .masthead-title {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      font-size: 46px;
+      line-height: 1;
+      color: var(--ink);
+      letter-spacing: -.01em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .masthead-tagline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 12px;
+      font-style: italic;
+      color: var(--muted);
+      margin-bottom: 9px;
+    }
+
+    .masthead-meta {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 5px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    /* HERO */
+    .hero {
+      padding: 22px 38px;
+      text-align: center;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .hero-eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 9px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 9px;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 900;
+      line-height: 1.08;
+      color: var(--ink);
+      text-transform: uppercase;
+      margin-bottom: 11px;
+    }
+
+    .hero-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      font-style: italic;
+      color: var(--muted);
+      max-width: 450px;
+      margin: 0 auto;
+      line-height: 1.55;
+    }
+
+    /* ORNAMENT */
+    .ornament {
+      text-align: center;
+      color: var(--gold);
+      font-size: 15px;
+      padding: 7px 0;
+      letter-spacing: .3em;
+      background: var(--parchment);
+    }
+
+    /* PROCLAMATION */
+    .proclamation {
+      margin: 0 38px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--gold);
+      background: var(--gold-pale);
+      padding: 16px 20px;
+    }
+
+    .proclamation-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 8px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 7px;
+      text-align: center;
+    }
+
+    .proclamation-greeting {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      font-style: italic;
+      color: var(--ink-light);
+      margin-bottom: 9px;
+    }
+
+    .proclamation-body {
+      font-family: 'EB Garamond', serif;
+      font-size: 13px;
+      line-height: 1.72;
+      color: var(--ink);
+      columns: 2;
+      column-gap: 18px;
+      margin-bottom: 9px;
+      text-align: justify;
+    }
+
+    .proclamation-sig {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 12px;
+      font-style: italic;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* SECTION COMMON */
+    .section-spacer {
+      height: 0;
+      background: var(--parchment);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .section-eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 8px;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--ink);
+      letter-spacing: .08em;
+    }
+
+    .section-rule {
+      width: 48px;
+      height: 1px;
+      background: var(--gold);
+      margin: 5px auto 0;
+    }
+
+    /* CROWN NEWS */
+    .crown-news {
+      padding: 22px 38px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .news-articles {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .news-article {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 9px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .news-article:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .article-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      padding-top: 2px;
+    }
+
+    .article-headline {
+      font-family: 'Playfair Display', serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--ink);
+      margin-bottom: 5px;
+      text-align: left;
+    }
+
+    .article-body {
+      font-size: 12.5px;
+      line-height: 1.68;
+      color: var(--ink-light);
+      text-align: justify;
+    }
+
+    .article-read-more {
+      display: inline-block;
+      margin-top: 7px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-decoration: none;
+      border-bottom: 1px solid var(--gold);
+      padding-bottom: 1px;
+    }
+
+    .article-read-more:hover {
+      color: var(--ink);
+      border-color: var(--ink);
+    }
+
+    /* EDICTS */
+    .edicts {
+      padding: 22px 38px;
+      border-bottom: 2px solid var(--border);
+      background: var(--parchment-dark);
+    }
+
+    .edict-quote {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-style: italic;
+      line-height: 1.5;
+      color: var(--ink);
+      text-align: center;
+      padding: 0 10px;
+      margin-bottom: 14px;
+    }
+
+    .edict-quote::before {
+      content: '\u201C';
+      color: var(--gold);
+      font-size: 34px;
+      vertical-align: -10px;
+      margin-right: 3px;
+    }
+
+    .edict-quote::after {
+      content: '\u201D';
+      color: var(--gold);
+      font-size: 34px;
+      vertical-align: -10px;
+      margin-left: 3px;
+    }
+
+    .edict-body {
+      columns: 2;
+      column-gap: 20px;
+      font-size: 12.5px;
+      line-height: 1.72;
+      color: var(--ink-light);
+      text-align: justify;
+    }
+
+    .edict-office {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 9px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    /* HIGHLIGHTS */
+    .highlights {
+      padding: 22px 38px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 11px;
+    }
+
+    .highlight-card {
+      border: 1px solid var(--border);
+      padding: 13px;
+      background: var(--parchment-dark);
+    }
+
+    .highlight-card-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 8px;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 5px;
+      font-weight: 200;
+    }
+
+    .highlight-card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 5px;
+      line-height: 1.2;
+    }
+
+    .highlight-card-body {
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: var(--ink-light);
+      text-align: justify;
+    }
+
+    /* CTA */
+    .cta {
+      padding: 22px 38px;
+      text-align: center;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .cta-inner {
+      border: 2px solid var(--border);
+      padding: 20px 26px;
+      background: var(--parchment-dark);
+    }
+
+    .cta-text {
+      font-family: 'EB Garamond', serif;
+      font-size: 13.5px;
+      color: var(--ink-light);
+      margin-bottom: 14px;
+      line-height: 1.65;
+    }
+
+    .cta-btn-render {
+      display: inline-block;
+      background: var(--sage);
+      color: var(--parchment);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 11px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      padding: 11px 28px;
+      text-decoration: none;
+    }
+
+    /* FOOTER DIVIDER */
+    .footer-divider {
+      display: flex;
+      align-items: center;
+      padding: 14px 38px 0;
+    }
+
+    .footer-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .footer-divider-diamond {
+      font-size: 12px;
+      color: var(--gold);
+      margin: 0 11px;
+      line-height: 1;
+    }
+
+    /* FOOTER */
+    .gazette-footer {
+      background: var(--parchment);
+    }
+
+    .footer-closing-quote {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-style: italic;
+      font-weight: 400;
+      line-height: 1.35;
+      color: var(--ink);
+      text-align: center;
+      padding: 18px 48px 4px;
+    }
+
+    .footer-decree {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 9px;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .footer-rule {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .footer-brand-block {
+      text-align: center;
+      padding: 14px 38px 5px;
+    }
+
+    .footer-brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin-bottom: 3px;
+    }
+
+    .footer-brand-desc {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 13px;
+      font-style: italic;
+      color: var(--ink-light);
+    }
+
+    .footer-links-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      padding: 9px 38px 4px;
+    }
+
+    .footer-link-item {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 12px;
+      letter-spacing: .08em;
+      color: var(--ink-light);
+      text-decoration: none;
+    }
+
+    .footer-link-item:hover {
+      color: var(--gold);
+    }
+
+    .footer-short-rule {
+      width: 130px;
+      height: 1px;
+      background: var(--border);
+      margin: 7px auto 9px;
+    }
+
+    .footer-unsub-note {
+      font-family: 'EB Garamond', serif;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+      padding: 0 48px 5px;
+    }
+
+    .footer-unsub-link {
+      display: block;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .1em;
+      text-align: center;
+      padding-bottom: 18px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--parchment-dark);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <span class="topbar-brand">⸻ Imperial Gazette · Newsletter Editor</span>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" onclick="resetForm()">Reset</button>
+        <button class="btn btn-ghost" onclick="exportHTML()">Export HTML</button>
+        <button class="btn btn-primary" onclick="window.print()">Save as PDF</button>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Imperial Court of Vovance</div>
+        <div class="sidebar-subtitle">Edit Your Dispatch</div>
+      </div>
+
+      <!-- 1. MASTHEAD -->
+      <div class="section-group">
+        <div class="section-group-header" onclick="toggleGroup(this)">Masthead &amp; Identity <span
+            class="chevron">▾</span></div>
+        <div class="section-group-body">
+          <div class="field"><label>Publication Name</label><input id="pub-name" value="The Vovance Imperial Gazette"
+              oninput="update()"></div>
+          <div class="field"><label>Tagline</label><input id="pub-tagline"
+              value="Curated by the Royal Intelligence Engine" oninput="update()"></div>
+          <div class="field"><label>Edition / Date</label><input id="pub-edition" value="Edition No. 111"
+              oninput="update()"></div>
+          <div class="field"><label>Volume / Issue</label><input id="pub-volume" value="Vol. 4 · Issue 33"
+              oninput="update()"></div>
+          <div class="field"><label>Subscriber Count</label><input id="pub-subs" value="Members: 23,472"
+              oninput="update()"></div>
+        </div>
+      </div>
+
+      <!-- 2. HERO -->
+      <div class="section-group">
+        <div class="section-group-header" onclick="toggleGroup(this)">Hero Section <span class="chevron">▾</span></div>
+        <div class="section-group-body">
+          <div class="field"><label>Eyebrow Label</label><input id="hero-eyebrow" value="From a Special Dispatch"
+              oninput="update()"></div>
+          <div class="field"><label>Main Headline</label><textarea id="hero-title"
+              oninput="update()">The Reign of Intelligence Has Begun</textarea></div>
+          <div class="field"><label>Subtitle</label><textarea id="hero-subtitle"
+              oninput="update()">A sovereign decree from the Imperial Court of Vovance. The future does not wait. Neither shall we.</textarea>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 4. PROCLAMATION -->
+      <div class="section-group">
+        <div class="section-group-header" onclick="toggleGroup(this)">Royal Proclamation <span class="chevron">▾</span>
+        </div>
+        <div class="section-group-body">
+          <div class="field"><label>Greeting</label><input id="proc-greeting" value="To the Architects of Tomorrow,"
+              oninput="update()"></div>
+          <div class="field"><label>Body (Enter = new paragraph)</label><textarea id="proc-body"
+              style="min-height:105px"
+              oninput="update()">The landscape of commerce has shifted beneath the feet of the unprepared. Those who hesitated have been left behind. Those who moved with conviction are positioned for the future. The age of passive adoption is over. What remains is the age of sovereign intelligence.
+
+At Vovance, we do not merely observe transformation. We orchestrate it. The Imperial autonomous intelligence has assumed the throne. Every royal barrier has been removed for strategic weight. Read carefully. Act decisively. The throne favors those that bold.</textarea>
+          </div>
+          <div class="field"><label>Signature</label><input id="proc-sig" value="— The Imperial Court of Vovance"
+              oninput="update()"></div>
+        </div>
+      </div>
+
+      <!-- 5. CROWN NEWS -->
+      <div class="section-group">
+        <div class="section-group-header" onclick="toggleGroup(this)">Crown News Articles <span class="chevron">▾</span>
+        </div>
+        <div class="section-group-body">
+          <div id="news-items"></div>
+          <button class="btn-add" onclick="addNews()">+ Add Article</button>
+        </div>
+      </div>
+
+      <!-- 6. EDICTS -->
+      <div class="section-group">
+        <div class="section-group-header" onclick="toggleGroup(this)">Edicts from the Court <span
+            class="chevron">▾</span></div>
+        <div class="section-group-body">
+          <div class="field"><label>Featured Quote</label><textarea id="edict-quote"
+              oninput="update()">The enterprise that treats AI as a tool will be consumed by the enterprise that treats AI as its foundation.</textarea>
+          </div>
+          <div class="field"><label>Edict Body (Enter = new paragraph)</label><textarea id="edict-body"
+              style="min-height:95px"
+              oninput="update()">AI is not a strategy; it is a structuring body. Organizations built on legacy infrastructure are watching their competitive advantage erode. The most competitive origins begin with AI, not on its margins. Data is the new sovereign wealth.
+
+Organizations that control data and master deployment will shape the terms of competition globally. Those that cede this territory will find themselves operating in a controlled but diminished province of success.</textarea>
+          </div>
+          <div class="field"><label>Office / Attribution Line</label><input id="edict-office"
+              value="Office of Strategic Intelligence · Vovance" oninput="update()"></div>
+        </div>
+      </div>
+
+      <!-- 7. HIGHLIGHTS -->
+      <div class="section-group">
+        <div class="section-group-header" onclick="toggleGroup(this)">Vovance Highlights <span class="chevron">▾</span>
+        </div>
+        <div class="section-group-body">
+          <div id="highlight-items"></div>
+          <button class="btn-add" onclick="addHighlight()">+ Add Highlight</button>
+        </div>
+      </div>
+
+
+      <!-- 9. CTA / ROYAL INVITATION -->
+      <div class="section-group">
+        <div class="section-group-header" onclick="toggleGroup(this)">Royal Invitation / CTA <span
+            class="chevron">▾</span></div>
+        <div class="section-group-body">
+          <div class="field"><label>Section Label</label><input id="cta-label" value="Royal Invitation"
+              oninput="update()"></div>
+          <div class="field"><label>Invitation Text (Enter = new paragraph)</label><textarea id="cta-text"
+              oninput="update()">There are a growing number of select peers granted limited Imperial access to a single private session with Vovance leadership.
+
+Each session is tailored to your organization's sovereign intelligence strategy. Seats are limited by decree.</textarea>
+          </div>
+          <div class="field"><label>Button Text</label><input id="cta-button" value="Book a Private Strategy Session"
+              oninput="update()"></div>
+          <div class="field"><label>Button URL</label><input id="cta-url" value="https://vovance.com/strategy"
+              oninput="update()" placeholder="https://..."></div>
+        </div>
+      </div>
+
+      <!-- 10. FOOTER -->
+      <div class="section-group">
+        <div class="section-group-header" onclick="toggleGroup(this)">Footer <span class="chevron">▾</span></div>
+        <div class="section-group-body">
+          <div class="field"><label>Closing Quote</label><textarea id="footer-closing"
+              oninput="update()">The crown belongs to those who build what others cannot yet imagine.</textarea></div>
+          <div class="field"><label>Decree Line</label><input id="footer-decree" value="Until the Next Decree — Vovance"
+              oninput="update()"></div>
+          <div class="field"><label>Brand Name</label><input id="footer-brand" value="VOVANCE" oninput="update()"></div>
+          <div class="field"><label>Brand Descriptor</label><input id="footer-desc"
+              value="Next-Generation AI and Digital Transformation" oninput="update()"></div>
+          <div class="field"><label>Link 1 Label</label><input id="link1-label" value="Website" oninput="update()">
+          </div>
+          <div class="field"><label>Link 1 URL</label><input id="link1-url" value="https://vovance.com"
+              oninput="update()" placeholder="https://..."></div>
+          <div class="field"><label>Link 2 Label</label><input id="link2-label" value="LinkedIn" oninput="update()">
+          </div>
+          <div class="field"><label>Link 2 URL</label><input id="link2-url" value="https://linkedin.com/company/vovance"
+              oninput="update()" placeholder="https://..."></div>
+          <div class="field"><label>Link 3 Label</label><input id="link3-label" value="Contact" oninput="update()">
+          </div>
+          <div class="field"><label>Link 3 URL</label><input id="link3-url" value="https://vovance.com/contact"
+              oninput="update()" placeholder="https://..."></div>
+          <div class="field"><label>Unsubscribe Note</label><input id="footer-unsub-note"
+              value="You are receiving this because you are recognized by the Court. To withdraw, unsubscribe below."
+              oninput="update()"></div>
+          <div class="field"><label>Unsubscribe Label</label><input id="footer-unsub-label" value="Unsubscribe"
+              oninput="update()"></div>
+          <div class="field"><label>Unsubscribe URL</label><input id="footer-unsub-url"
+              value="https://vovance.com/unsubscribe" oninput="update()" placeholder="https://..."></div>
+        </div>
+      </div>
+
+    </aside>
+
+    <main class="preview-panel">
+      <div class="gazette" id="gazette-preview"></div>
+    </main>
+
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════
+       DATA
+    ═══════════════════════════════════════ */
+    let newsItems = [
+      {
+        headline: 'AI Agents, Security Risks & Infrastructure',
+        body: 'The era of basic, standalone use of AI agents now requires systems, orchestrations, and end-to-end enterprise pipelines and cross-enterprise prompting, functions that a long-range agent typically can\'t do.\n\nIt requires agents to composite both strategy and resources for Q4 deployments — moving far beyond single-task automation into orchestrated enterprise intelligence.',
+        link: ''
+      },
+      {
+        headline: 'The CIO Becomes the Sovereign',
+        body: 'A seismic shift continues to reshape organizations. For a decade, technology was management\'s enabler, not its throne. CIOs who previously wrestled with maximizing budget, infrastructure and IT are now assuming the decisive strategic balance — eliminating budget, titles, and enterprise velocity.\n\nThose who understand AI as infrastructure — not software — are redefining what competitive leadership looks like in the modern enterprise.',
+        link: ''
+      },
+      {
+        headline: 'Data Sovereignty Reshapes Global Commerce',
+        body: 'Nations are now playing with digital economies. Forty regulatory decisions crossed global and media outlets related to sovereign data assets, public information, and privacy protection commitments. Your opportunities stand with those who can generate and build those into action across the frontier markets.\n\nIntelligence-first organizations are already capitalizing on this shift.',
+        link: ''
+      }
+    ];
+    let highlights = [
+      {
+        label: 'Product',
+        title: 'Vovance Nexus 3.0 Launched',
+        body: 'The Nexus autonomous AI client now brings enterprise AI-grade workflows across task and value programs. Powerful AI-native orchestration and seamless enterprise integrations.'
+      },
+      {
+        label: 'Advisory',
+        title: 'Sovereign AI Advisory Practice',
+        body: 'Vovance delivers dedicated AI guidance to Fortune 500 businesses through AI governance, regulatory compliance, simulations, and integration strategy — from diagnostic to deployment.'
+      },
+      {
+        label: 'Growth',
+        title: 'Twelve New Imperial Partnerships',
+        body: 'Vovance has onboarded 12 enterprise firms across finance, retail, real-estate, manufacturing — including due diligence automation and AI-led compliance upgrade engagements.'
+      }
+    ];
+
+    /* ═══════════════════════════════════════
+       HELPERS
+    ═══════════════════════════════════════ */
+    function e(id) { return document.getElementById(id)?.value || ''; }
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function nl(s) { return esc(s).replace(/\n/g, '<br>'); }
+
+    /* ═══════════════════════════════════════
+       RENDER GAZETTE
+    ═══════════════════════════════════════ */
+    function renderGazette() {
+      // News
+      const newsHTML = newsItems.map((n, i) => `
+    <div class="news-article">
+      <div class="article-num">0${i + 1}</div>
+      <div>
+        <div class="article-headline">${esc(n.headline)}</div>
+        <div class="article-body">${nl(n.body)}</div>
+        ${n.link ? `<a class="article-read-more" href="${esc(n.link)}" target="_blank">Read More →</a>` : ''}
+      </div>
+    </div>`).join('');
+
+      // Highlights
+      const hlHTML = highlights.map(h => `
+    <div class="highlight-card">
+      <div class="highlight-card-label">${esc(h.label)}</div>
+      <div class="highlight-card-title">${esc(h.title)}</div>
+      <div class="highlight-card-body">${nl(h.body)}</div>
+    </div>`).join('');
+
+      document.getElementById('gazette-preview').innerHTML = `
+
+    <!-- MASTHEAD -->
+    <div class="masthead">
+      <div class="masthead-eyebrow">The Imperial &nbsp;·&nbsp; Vovance &nbsp;·&nbsp; The Sovereign Voice of Intelligence &nbsp;·&nbsp; Vovance &nbsp;·&nbsp; Intelligence</div>
+      <div class="masthead-title">${nl(e('pub-name'))}</div>
+      <div class="masthead-tagline">${esc(e('pub-tagline'))}</div>
+      <div class="masthead-meta">
+        <span>${esc(e('pub-edition'))}</span>
+        <span>${esc(e('pub-subs'))}</span>
+        <span>${esc(e('pub-volume'))}</span>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-eyebrow">${esc(e('hero-eyebrow'))}</div>
+      <div class="hero-title">${nl(e('hero-title'))}</div>
+      <div class="hero-subtitle">${nl(e('hero-subtitle'))}</div>
+    </div>
+
+
+    <!-- ORNAMENT -->
+    <div class="ornament">&#10022; &nbsp; &#10022; &nbsp; &#10022;</div>
+
+    <!-- PROCLAMATION -->
+    <div class="proclamation">
+      <div class="proclamation-label">Royal Proclamation</div>
+      <div class="proclamation-greeting">${esc(e('proc-greeting'))}</div>
+      <div class="proclamation-body">${nl(e('proc-body'))}</div>
+      <div class="proclamation-sig">${esc(e('proc-sig'))}</div>
+    </div>
+
+    <div class="section-spacer"></div>
+
+    <!-- CROWN NEWS -->
+    <div class="crown-news">
+      <div class="section-header">
+        <div class="section-eyebrow">First Light From the Imperial</div>
+        <div class="section-title">Crown News</div>
+        <div class="section-rule"></div>
+      </div>
+      <div class="news-articles">${newsHTML}</div>
+    </div>
+
+    <!-- EDICTS FROM THE COURT -->
+    <div class="edicts">
+      <div class="section-header">
+        <div class="section-eyebrow">From the Imperial Sovereign</div>
+        <div class="section-title">Edicts from the Court</div>
+        <div class="section-rule"></div>
+      </div>
+      <div class="edict-quote">${esc(e('edict-quote'))}</div>
+      <div class="edict-body">${nl(e('edict-body'))}</div>
+      <div class="edict-office">${esc(e('edict-office'))}</div>
+    </div>
+
+    <!-- VOVANCE HIGHLIGHTS -->
+    <div class="highlights">
+      <div class="section-header">
+        <div class="section-eyebrow">About What We Build</div>
+        <div class="section-title">Vovance Highlights</div>
+        <div class="section-rule"></div>
+      </div>
+      <div class="highlights-grid">${hlHTML}</div>
+    </div>
+
+
+    <!-- ROYAL INVITATION / CTA -->
+    <div class="cta">
+      <div class="section-header">
+        <div class="section-eyebrow">Your Imperial Counsel</div>
+        <div class="section-title">${esc(e('cta-label'))}</div>
+        <div class="section-rule"></div>
+      </div>
+      <div class="cta-inner">
+        <div class="cta-text">${nl(e('cta-text'))}</div>
+        <a class="cta-btn-render" href="${esc(e('cta-url'))}" target="_blank">${esc(e('cta-button'))}</a>
+      </div>
+    </div>
+
+    <!-- FOOTER DIVIDER -->
+    <div class="footer-divider">
+      <div class="footer-divider-line"></div>
+      <div class="footer-divider-diamond">&#9670;</div>
+      <div class="footer-divider-line"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="gazette-footer">
+      <div class="footer-closing-quote">${nl(e('footer-closing'))}</div>
+      <div class="footer-decree">${esc(e('footer-decree'))}</div>
+      <div class="footer-rule"></div>
+      <div class="footer-brand-block">
+        <div class="footer-brand-name">${esc(e('footer-brand'))}</div>
+        <div class="footer-brand-desc"><em>${esc(e('footer-desc'))}</em></div>
+      </div>
+      <div class="footer-links-row">
+        <a class="footer-link-item" href="${esc(e('link1-url'))}" target="_blank">${esc(e('link1-label'))}</a>
+        <a class="footer-link-item" href="${esc(e('link2-url'))}" target="_blank">${esc(e('link2-label'))}</a>
+        <a class="footer-link-item" href="${esc(e('link3-url'))}" target="_blank">${esc(e('link3-label'))}</a>
+      </div>
+      <div class="footer-short-rule"></div>
+      <div class="footer-unsub-note">${esc(e('footer-unsub-note'))}</div>
+      <a class="footer-unsub-link" href="${esc(e('footer-unsub-url'))}" target="_blank">${esc(e('footer-unsub-label'))}</a>
+    </div>
+  `;
+    }
+
+    /* ═══════════════════════════════════════
+       NEWS REPEATER
+    ═══════════════════════════════════════ */
+    function renderNewsControls() {
+      document.getElementById('news-items').innerHTML = newsItems.map((n, i) => `
+    <div class="news-item">
+      <div class="item-num">Article 0${i + 1}</div>
+      <button class="news-remove" onclick="removeNews(${i})">✕</button>
+      <div class="field"><label>Headline</label><input value="${esc(n.headline)}" oninput="newsItems[${i}].headline=this.value;renderGazette()"></div>
+      <div class="field"><label>Body (Enter = new line)</label><textarea oninput="newsItems[${i}].body=this.value;renderGazette()">${esc(n.body)}</textarea></div>
+      <div class="field"><label>Read More URL (optional)</label><input value="${esc(n.link||'')}" placeholder="https://..." oninput="newsItems[${i}].link=this.value;renderGazette()"></div>
+    </div>`).join('');
+    }
+    function addNews() { newsItems.push({ headline: 'New Headline', body: 'Write your article body here.\n\nAdd a second paragraph for depth.', link: '' }); renderNewsControls(); renderGazette(); }
+    function removeNews(i) { newsItems.splice(i, 1); renderNewsControls(); renderGazette(); }
+
+    /* ═══════════════════════════════════════
+       HIGHLIGHT REPEATER
+    ═══════════════════════════════════════ */
+    function renderHighlightControls() {
+      document.getElementById('highlight-items').innerHTML = highlights.map((h, i) => `
+    <div class="highlight-item">
+      <div class="item-num">Highlight ${i + 1}</div>
+      <button class="news-remove" onclick="removeHighlight(${i})">✕</button>
+      <div class="field"><label>Category</label><input value="${esc(h.label)}" oninput="highlights[${i}].label=this.value;renderGazette()"></div>
+      <div class="field"><label>Title</label><input value="${esc(h.title)}" oninput="highlights[${i}].title=this.value;renderGazette()"></div>
+      <div class="field"><label>Body</label><textarea oninput="highlights[${i}].body=this.value;renderGazette()">${esc(h.body)}</textarea></div>
+    </div>`).join('');
+    }
+    function addHighlight() { highlights.push({ label: 'Category', title: 'Highlight Title', body: 'Description of this highlight.' }); renderHighlightControls(); renderGazette(); }
+    function removeHighlight(i) { highlights.splice(i, 1); renderHighlightControls(); renderGazette(); }
+
+    /* ═══════════════════════════════════════
+       UTILS
+    ═══════════════════════════════════════ */
+    function toggleGroup(h) { h.classList.toggle('collapsed'); h.nextElementSibling.classList.toggle('hidden'); }
+    function update() { renderGazette(); }
+    function resetForm() { if (confirm('Reset all content to defaults?')) location.reload(); }
+
+    /* ═══════════════════════════════════════
+       EXPORT HTML — EMAIL-SAFE VERSION
+       Uses table layout, inline styles, no CSS grid/flex/columns
+    ═══════════════════════════════════════ */
+    function exportHTML() {
+      const pubName   = e('pub-name');
+      const pubTagline= e('pub-tagline');
+      const pubEdition= e('pub-edition');
+      const pubSubs   = e('pub-subs');
+      const pubVol    = e('pub-volume');
+      const heroEye   = e('hero-eyebrow');
+      const heroTitle = e('hero-title');
+      const heroSub   = e('hero-subtitle');
+      const procGreet = e('proc-greeting');
+      const procBody  = e('proc-body');
+      const procSig   = e('proc-sig');
+      const edictQ    = e('edict-quote');
+      const edictB    = e('edict-body');
+      const edictO    = e('edict-office');
+      const ctaLabel  = e('cta-label');
+      const ctaText   = e('cta-text');
+      const ctaBtn    = e('cta-button');
+      const ctaUrl    = e('cta-url');
+      const footClose = e('footer-closing');
+      const footDecree= e('footer-decree');
+      const footBrand = e('footer-brand');
+      const footDesc  = e('footer-desc');
+      const l1lbl     = e('link1-label'); const l1url = e('link1-url');
+      const l2lbl     = e('link2-label'); const l2url = e('link2-url');
+      const l3lbl     = e('link3-label'); const l3url = e('link3-url');
+      const unsubNote = e('footer-unsub-note');
+      const unsubLbl  = e('footer-unsub-label');
+      const unsubUrl  = e('footer-unsub-url');
+
+      /* helpers */
+      function ex(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function nlp(s){ return ex(s).split(/\n+/).map(p=>`<p style="margin:0 0 9px 0;">${p}</p>`).join(''); }
+
+      /* — NEWS ARTICLES — */
+      const newsRowsHTML = newsItems.map((n,i)=>`
+<tr><td style="border-bottom:1px solid #c8b882;padding-bottom:14px;padding-top:${i===0?'0':'14px'};">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    <tr>
+      <td width="36" valign="top" style="font-family:Georgia,serif;font-size:22px;font-weight:900;color:#b8973a;line-height:1;padding-top:2px;padding-right:9px;">0${i+1}</td>
+      <td valign="top">
+        <div style="font-family:Georgia,serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#1a1208;margin-bottom:5px;">${ex(n.headline)}</div>
+        <div style="font-family:Georgia,serif;font-size:12px;line-height:1.68;color:#2a1e0a;">${nlp(n.body)}</div>
+        ${n.link?`<a href="${ex(n.link)}" style="display:inline-block;margin-top:7px;font-family:Georgia,serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b8973a;text-decoration:none;border-bottom:1px solid #b8973a;padding-bottom:1px;">Read More &#8594;</a>`:''}
+      </td>
+    </tr>
+  </table>
+</td></tr>`).join('');
+
+      /* — HIGHLIGHTS — */
+      const hlCardWidth = Math.floor(664 / Math.max(highlights.length,1));
+      const hlCellsHTML = highlights.map(h=>`
+<td width="${hlCardWidth}" valign="top" style="border:1px solid #c8b882;padding:13px;background-color:#ede5d5;">
+  <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:#b8973a;margin-bottom:5px;">${ex(h.label)}</div>
+  <div style="font-family:Georgia,serif;font-size:12px;font-weight:700;color:#1a1208;margin-bottom:5px;line-height:1.2;">${ex(h.title)}</div>
+  <div style="font-family:Georgia,serif;font-size:11px;line-height:1.6;color:#2a1e0a;">${nlp(h.body)}</div>
+</td>`).join('<td width="6"></td>');
+
+      const html = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<title>${ex(pubName)}</title>
+<!--[if mso]><style>td{font-family:Georgia,serif!important;}</style><![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#3a2e18;font-family:Georgia,serif;">
+
+<!-- OUTER WRAPPER -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#3a2e18;">
+<tr><td align="center" style="padding:30px 14px;">
+
+<!-- GAZETTE CONTAINER -->
+<table width="740" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:740px;width:100%;background-color:#f5f0e8;">
+
+<!-- ══ MASTHEAD ══ -->
+<tr><td style="padding:20px 38px 0;text-align:center;border-bottom:3px double #c8b882;">
+  <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.35em;text-transform:uppercase;color:#7a6a4a;margin-bottom:7px;">The Imperial &nbsp;&middot;&nbsp; Vovance &nbsp;&middot;&nbsp; The Sovereign Voice of Intelligence &nbsp;&middot;&nbsp; Intelligence</div>
+  <div style="font-family:Georgia,serif;font-size:42px;font-weight:900;line-height:1;color:#1a1208;letter-spacing:-.01em;text-transform:uppercase;margin-bottom:6px;">${ex(pubName)}</div>
+  <div style="font-family:Georgia,serif;font-size:12px;font-style:italic;color:#7a6a4a;margin-bottom:9px;">${ex(pubTagline)}</div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #c8b882;">
+    <tr>
+      <td style="font-family:Georgia,serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7a6a4a;padding:5px 0;text-align:left;">${ex(pubEdition)}</td>
+      <td style="font-family:Georgia,serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7a6a4a;padding:5px 0;text-align:center;">${ex(pubSubs)}</td>
+      <td style="font-family:Georgia,serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7a6a4a;padding:5px 0;text-align:right;">${ex(pubVol)}</td>
+    </tr>
+  </table>
+</td></tr>
+
+<!-- ══ HERO ══ -->
+<tr><td style="padding:22px 38px;text-align:center;border-bottom:2px solid #c8b882;">
+  <div style="font-family:Georgia,serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:#b8973a;margin-bottom:9px;">${ex(heroEye)}</div>
+  <div style="font-family:Georgia,serif;font-size:32px;font-weight:900;line-height:1.08;color:#1a1208;text-transform:uppercase;margin-bottom:11px;">${ex(heroTitle)}</div>
+  <div style="font-family:Georgia,serif;font-size:14px;font-style:italic;color:#7a6a4a;max-width:450px;margin:0 auto;line-height:1.55;">${ex(heroSub)}</div>
+</td></tr>
+
+<!-- ══ ORNAMENT ══ -->
+<tr><td style="text-align:center;color:#b8973a;font-size:15px;padding:10px 0;letter-spacing:.3em;background-color:#f5f0e8;">&#10022; &nbsp; &#10022; &nbsp; &#10022;</td></tr>
+
+<!-- ══ PROCLAMATION ══ -->
+<tr><td style="padding:0 38px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border:1px solid #c8b882;border-left:4px solid #b8973a;background-color:#f0e5c0;">
+    <tr><td style="padding:16px 20px;">
+      <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#b8973a;margin-bottom:7px;text-align:center;">Royal Proclamation</div>
+      <div style="font-family:Georgia,serif;font-size:16px;font-style:italic;color:#2a1e0a;margin-bottom:9px;">${ex(procGreet)}</div>
+      <div style="font-family:Georgia,serif;font-size:13px;line-height:1.72;color:#1a1208;margin-bottom:9px;">${nlp(procBody)}</div>
+      <div style="font-family:Georgia,serif;font-size:12px;font-style:italic;color:#7a6a4a;text-align:right;">${ex(procSig)}</div>
+    </td></tr>
+  </table>
+</td></tr>
+
+<!-- ══ CROWN NEWS ══ -->
+<tr><td style="padding:22px 38px;border-bottom:2px solid #c8b882;">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#7a6a4a;margin-bottom:3px;">First Light From the Imperial</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;text-transform:uppercase;color:#1a1208;letter-spacing:.08em;">Crown News</div>
+    <div style="width:48px;height:1px;background-color:#b8973a;margin:5px auto 0;font-size:0;line-height:0;">&nbsp;</div>
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    ${newsRowsHTML}
+  </table>
+</td></tr>
+
+<!-- ══ EDICTS ══ -->
+<tr><td style="padding:22px 38px;border-bottom:2px solid #c8b882;background-color:#ede5d5;">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#7a6a4a;margin-bottom:3px;">From the Imperial Sovereign</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;text-transform:uppercase;color:#1a1208;letter-spacing:.08em;">Edicts from the Court</div>
+    <div style="width:48px;height:1px;background-color:#b8973a;margin:5px auto 0;font-size:0;line-height:0;">&nbsp;</div>
+  </div>
+  <div style="font-family:Georgia,serif;font-size:17px;font-style:italic;line-height:1.5;color:#1a1208;text-align:center;padding:0 10px;margin-bottom:14px;">
+    <span style="color:#b8973a;font-size:34px;vertical-align:-10px;margin-right:3px;">&ldquo;</span>${ex(edictQ)}<span style="color:#b8973a;font-size:34px;vertical-align:-10px;margin-left:3px;">&rdquo;</span>
+  </div>
+  <div style="font-family:Georgia,serif;font-size:12px;line-height:1.72;color:#2a1e0a;">${nlp(edictB)}</div>
+  <div style="font-family:Georgia,serif;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#7a6a4a;text-align:center;margin-top:12px;">${ex(edictO)}</div>
+</td></tr>
+
+<!-- ══ HIGHLIGHTS ══ -->
+<tr><td style="padding:22px 38px;border-bottom:2px solid #c8b882;">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#7a6a4a;margin-bottom:3px;">About What We Build</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;text-transform:uppercase;color:#1a1208;letter-spacing:.08em;">Vovance Highlights</div>
+    <div style="width:48px;height:1px;background-color:#b8973a;margin:5px auto 0;font-size:0;line-height:0;">&nbsp;</div>
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    <tr valign="top">${hlCellsHTML}</tr>
+  </table>
+</td></tr>
+
+<!-- ══ CTA / ROYAL INVITATION ══ -->
+<tr><td style="padding:22px 38px;text-align:center;border-bottom:2px solid #c8b882;">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#7a6a4a;margin-bottom:3px;">Your Imperial Counsel</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;text-transform:uppercase;color:#1a1208;letter-spacing:.08em;">${ex(ctaLabel)}</div>
+    <div style="width:48px;height:1px;background-color:#b8973a;margin:5px auto 0;font-size:0;line-height:0;">&nbsp;</div>
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border:2px solid #c8b882;background-color:#ede5d5;">
+    <tr><td style="padding:20px 26px;text-align:center;">
+      <div style="font-family:Georgia,serif;font-size:13px;color:#2a1e0a;margin-bottom:14px;line-height:1.65;">${nlp(ctaText)}</div>
+      <a href="${ex(ctaUrl)}" style="display:inline-block;background-color:#3d5a3e;color:#f5f0e8;font-family:Georgia,serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;padding:11px 28px;text-decoration:none;mso-padding-alt:0;border:0;">${ex(ctaBtn)}</a>
+    </td></tr>
+  </table>
+</td></tr>
+
+<!-- ══ FOOTER DIVIDER ══ -->
+<tr><td style="padding:14px 38px 0;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    <tr>
+      <td style="height:1px;background-color:#c8b882;font-size:0;line-height:0;">&nbsp;</td>
+      <td width="24" style="text-align:center;font-size:12px;color:#b8973a;padding:0 4px;">&#9670;</td>
+      <td style="height:1px;background-color:#c8b882;font-size:0;line-height:0;">&nbsp;</td>
+    </tr>
+  </table>
+</td></tr>
+
+<!-- ══ FOOTER ══ -->
+<tr><td style="background-color:#f5f0e8;">
+  <div style="font-family:Georgia,serif;font-size:20px;font-style:italic;font-weight:400;line-height:1.35;color:#1a1208;text-align:center;padding:18px 48px 4px;">${ex(footClose)}</div>
+  <div style="font-family:Georgia,serif;font-size:9px;letter-spacing:.35em;text-transform:uppercase;color:#b8973a;text-align:center;margin-bottom:14px;">${ex(footDecree)}</div>
+  <div style="width:100%;height:1px;background-color:#c8b882;font-size:0;line-height:0;">&nbsp;</div>
+  <div style="text-align:center;padding:14px 38px 5px;">
+    <div style="font-family:Georgia,serif;font-size:19px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1a1208;margin-bottom:3px;">${ex(footBrand)}</div>
+    <div style="font-family:Georgia,serif;font-size:13px;font-style:italic;color:#2a1e0a;">${ex(footDesc)}</div>
+  </div>
+  <div style="text-align:center;padding:9px 38px 4px;">
+    <a href="${ex(l1url)}" style="font-family:Georgia,serif;font-size:12px;letter-spacing:.08em;color:#2a1e0a;text-decoration:none;margin:0 12px;">${ex(l1lbl)}</a>
+    <a href="${ex(l2url)}" style="font-family:Georgia,serif;font-size:12px;letter-spacing:.08em;color:#2a1e0a;text-decoration:none;margin:0 12px;">${ex(l2lbl)}</a>
+    <a href="${ex(l3url)}" style="font-family:Georgia,serif;font-size:12px;letter-spacing:.08em;color:#2a1e0a;text-decoration:none;margin:0 12px;">${ex(l3lbl)}</a>
+  </div>
+  <div style="width:130px;height:1px;background-color:#c8b882;margin:7px auto 9px;font-size:0;line-height:0;">&nbsp;</div>
+  <div style="font-family:Georgia,serif;font-size:11px;color:#7a6a4a;text-align:center;line-height:1.6;padding:0 48px 5px;">${ex(unsubNote)}</div>
+  <div style="text-align:center;padding-bottom:18px;"><a href="${ex(unsubUrl)}" style="font-family:Georgia,serif;font-size:11px;color:#7a6a4a;letter-spacing:.1em;text-decoration:underline;">${ex(unsubLbl)}</a></div>
+</td></tr>
+
+</table><!-- end gazette -->
+</td></tr>
+</table><!-- end outer -->
+
+</body>
+</html>`;
+
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'imperial-gazette-email.html';
+      a.click();
+    }
+
+    /* ═══════════════════════════════════════
+       INIT
+    ═══════════════════════════════════════ */
+    renderNewsControls();
+    renderHighlightControls();
+    renderGazette();
+
+    /* ═══════════════════════════════════════
+       POST MESSAGE BRIDGE
+       Reuses the exact same email-safe HTML builder
+       as exportHTML(). Parent page sends GET_EXPORT_HTML,
+       we respond with EXPORT_HTML containing the full
+       inline-styled table email — identical to Export HTML.
+    ═══════════════════════════════════════ */
+    function buildEmailSafeHTML() {
+      const pubName   = e('pub-name');
+      const pubTagline= e('pub-tagline');
+      const pubEdition= e('pub-edition');
+      const pubSubs   = e('pub-subs');
+      const pubVol    = e('pub-volume');
+      const heroEye   = e('hero-eyebrow');
+      const heroTitle = e('hero-title');
+      const heroSub   = e('hero-subtitle');
+      const procGreet = e('proc-greeting');
+      const procBody  = e('proc-body');
+      const procSig   = e('proc-sig');
+      const edictQ    = e('edict-quote');
+      const edictB    = e('edict-body');
+      const edictO    = e('edict-office');
+      const ctaLabel  = e('cta-label');
+      const ctaText   = e('cta-text');
+      const ctaBtn    = e('cta-button');
+      const ctaUrl    = e('cta-url');
+      const footClose = e('footer-closing');
+      const footDecree= e('footer-decree');
+      const footBrand = e('footer-brand');
+      const footDesc  = e('footer-desc');
+      const l1lbl     = e('link1-label'); const l1url = e('link1-url');
+      const l2lbl     = e('link2-label'); const l2url = e('link2-url');
+      const l3lbl     = e('link3-label'); const l3url = e('link3-url');
+      const unsubNote = e('footer-unsub-note');
+      const unsubLbl  = e('footer-unsub-label');
+      const unsubUrl  = e('footer-unsub-url');
+
+      function ex(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function nlp(s){ return ex(s).split(/\n+/).map(p=>`<p style="margin:0 0 9px 0;">${p}</p>`).join(''); }
+
+      /* — NEWS ARTICLES — */
+      const newsRowsHTML = newsItems.map((n,i)=>`
+<tr><td style="border-bottom:1px solid #c8b882;padding-bottom:14px;padding-top:${i===0?'0':'14px'};">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    <tr>
+      <td width="36" valign="top" style="font-family:Georgia,serif;font-size:22px;font-weight:900;color:#b8973a;line-height:1;padding-top:2px;padding-right:9px;">0${i+1}</td>
+      <td valign="top">
+        <div style="font-family:Georgia,serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#1a1208;margin-bottom:5px;">${ex(n.headline)}</div>
+        <div style="font-family:Georgia,serif;font-size:12px;line-height:1.68;color:#2a1e0a;">${nlp(n.body)}</div>
+        ${n.link?`<a href="${ex(n.link)}" style="display:inline-block;margin-top:7px;font-family:Georgia,serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b8973a;text-decoration:none;border-bottom:1px solid #b8973a;padding-bottom:1px;">Read More &#8594;</a>`:''}
+      </td>
+    </tr>
+  </table>
+</td></tr>`).join('');
+
+      /* — PROCLAMATION — split into 2 columns via table — */
+      const procParas = procBody.split(/\n+/).filter(p=>p.trim());
+      const half = Math.ceil(procParas.length / 2);
+      const col1 = procParas.slice(0, half).map(p=>`<p style="margin:0 0 9px 0;">${ex(p)}</p>`).join('');
+      const col2 = procParas.slice(half).map(p=>`<p style="margin:0 0 9px 0;">${ex(p)}</p>`).join('');
+      const procTwoCols = `
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    <tr>
+      <td width="48%" valign="top" style="font-family:Georgia,serif;font-size:13px;line-height:1.72;color:#1a1208;text-align:justify;padding-right:9px;">${col1}</td>
+      <td width="4%"></td>
+      <td width="48%" valign="top" style="font-family:Georgia,serif;font-size:13px;line-height:1.72;color:#1a1208;text-align:justify;">${col2}</td>
+    </tr>
+  </table>`;
+
+      /* — EDICTS BODY — split into 2 columns via table — */
+      const edictParas = edictB.split(/\n+/).filter(p=>p.trim());
+      const ehalf = Math.ceil(edictParas.length / 2);
+      const ec1 = edictParas.slice(0, ehalf).map(p=>`<p style="margin:0 0 9px 0;">${ex(p)}</p>`).join('');
+      const ec2 = edictParas.slice(ehalf).map(p=>`<p style="margin:0 0 9px 0;">${ex(p)}</p>`).join('');
+      const edictTwoCols = `
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    <tr>
+      <td width="48%" valign="top" style="font-family:Georgia,serif;font-size:12px;line-height:1.72;color:#2a1e0a;text-align:justify;padding-right:9px;">${ec1}</td>
+      <td width="4%"></td>
+      <td width="48%" valign="top" style="font-family:Georgia,serif;font-size:12px;line-height:1.72;color:#2a1e0a;text-align:justify;">${ec2}</td>
+    </tr>
+  </table>`;
+
+      /* — HIGHLIGHTS — table columns — */
+      const hlCount = Math.max(highlights.length, 1);
+      const hlCellW = Math.floor(664 / hlCount);
+      const hlCellsHTML = highlights.map(h=>`
+<td width="${hlCellW}" valign="top" style="border:1px solid #c8b882;padding:13px;background-color:#ede5d5;">
+  <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:#b8973a;margin-bottom:5px;">${ex(h.label)}</div>
+  <div style="font-family:Georgia,serif;font-size:12px;font-weight:700;color:#1a1208;margin-bottom:5px;line-height:1.2;">${ex(h.title)}</div>
+  <div style="font-family:Georgia,serif;font-size:11px;line-height:1.6;color:#2a1e0a;">${nlp(h.body)}</div>
+</td>`).join('<td width="6"></td>');
+
+      return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<title>${ex(pubName)}</title>
+<!--[if mso]><style>td{font-family:Georgia,serif!important;}</style><![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#3a2e18;font-family:Georgia,serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#3a2e18;">
+<tr><td align="center" style="padding:30px 14px;">
+
+<table width="740" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:740px;width:100%;background-color:#f5f0e8;">
+
+<!-- MASTHEAD -->
+<tr><td style="padding:20px 38px 0;text-align:center;border-bottom:3px double #c8b882;">
+  <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.35em;text-transform:uppercase;color:#7a6a4a;margin-bottom:7px;">The Imperial &nbsp;&middot;&nbsp; Vovance &nbsp;&middot;&nbsp; The Sovereign Voice of Intelligence &nbsp;&middot;&nbsp; Intelligence</div>
+  <div style="font-family:Georgia,serif;font-size:42px;font-weight:900;line-height:1;color:#1a1208;letter-spacing:-.01em;text-transform:uppercase;margin-bottom:6px;">${ex(pubName)}</div>
+  <div style="font-family:Georgia,serif;font-size:12px;font-style:italic;color:#7a6a4a;margin-bottom:9px;">${ex(pubTagline)}</div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #c8b882;">
+    <tr>
+      <td style="font-family:Georgia,serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7a6a4a;padding:5px 0;text-align:left;">${ex(pubEdition)}</td>
+      <td style="font-family:Georgia,serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7a6a4a;padding:5px 0;text-align:center;">${ex(pubSubs)}</td>
+      <td style="font-family:Georgia,serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7a6a4a;padding:5px 0;text-align:right;">${ex(pubVol)}</td>
+    </tr>
+  </table>
+</td></tr>
+
+<!-- HERO -->
+<tr><td style="padding:22px 38px;text-align:center;border-bottom:2px solid #c8b882;">
+  <div style="font-family:Georgia,serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:#b8973a;margin-bottom:9px;">${ex(heroEye)}</div>
+  <div style="font-family:Georgia,serif;font-size:32px;font-weight:900;line-height:1.08;color:#1a1208;text-transform:uppercase;margin-bottom:11px;">${nlp(heroTitle)}</div>
+  <div style="font-family:Georgia,serif;font-size:14px;font-style:italic;color:#7a6a4a;max-width:450px;margin:0 auto;line-height:1.55;">${ex(heroSub)}</div>
+</td></tr>
+
+<!-- ORNAMENT -->
+<tr><td style="text-align:center;color:#b8973a;font-size:15px;padding:10px 0;letter-spacing:.3em;background-color:#f5f0e8;">&#10022; &nbsp; &#10022; &nbsp; &#10022;</td></tr>
+
+<!-- PROCLAMATION -->
+<tr><td style="padding:0 38px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border:1px solid #c8b882;border-left:4px solid #b8973a;background-color:#f0e5c0;">
+    <tr><td style="padding:16px 20px;">
+      <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#b8973a;margin-bottom:7px;text-align:center;">Royal Proclamation</div>
+      <div style="font-family:Georgia,serif;font-size:16px;font-style:italic;color:#2a1e0a;margin-bottom:9px;">${ex(procGreet)}</div>
+      ${procTwoCols}
+      <div style="font-family:Georgia,serif;font-size:12px;font-style:italic;color:#7a6a4a;text-align:right;margin-top:9px;">${ex(procSig)}</div>
+    </td></tr>
+  </table>
+</td></tr>
+
+<!-- CROWN NEWS -->
+<tr><td style="padding:22px 38px;border-bottom:2px solid #c8b882;">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#7a6a4a;margin-bottom:3px;">First Light From the Imperial</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;text-transform:uppercase;color:#1a1208;letter-spacing:.08em;">Crown News</div>
+    <div style="width:48px;height:1px;background-color:#b8973a;margin:5px auto 0;font-size:0;line-height:0;">&nbsp;</div>
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    ${newsRowsHTML}
+  </table>
+</td></tr>
+
+<!-- EDICTS -->
+<tr><td style="padding:22px 38px;border-bottom:2px solid #c8b882;background-color:#ede5d5;">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#7a6a4a;margin-bottom:3px;">From the Imperial Sovereign</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;text-transform:uppercase;color:#1a1208;letter-spacing:.08em;">Edicts from the Court</div>
+    <div style="width:48px;height:1px;background-color:#b8973a;margin:5px auto 0;font-size:0;line-height:0;">&nbsp;</div>
+  </div>
+  <div style="font-family:Georgia,serif;font-size:17px;font-style:italic;line-height:1.5;color:#1a1208;text-align:center;padding:0 10px;margin-bottom:14px;">
+    <span style="color:#b8973a;font-size:34px;vertical-align:-10px;margin-right:3px;">&ldquo;</span>${ex(edictQ)}<span style="color:#b8973a;font-size:34px;vertical-align:-10px;margin-left:3px;">&rdquo;</span>
+  </div>
+  ${edictTwoCols}
+  <div style="font-family:Georgia,serif;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#7a6a4a;text-align:center;margin-top:12px;">${ex(edictO)}</div>
+</td></tr>
+
+<!-- HIGHLIGHTS -->
+<tr><td style="padding:22px 38px;border-bottom:2px solid #c8b882;">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#7a6a4a;margin-bottom:3px;">About What We Build</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;text-transform:uppercase;color:#1a1208;letter-spacing:.08em;">Vovance Highlights</div>
+    <div style="width:48px;height:1px;background-color:#b8973a;margin:5px auto 0;font-size:0;line-height:0;">&nbsp;</div>
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    <tr valign="top">${hlCellsHTML}</tr>
+  </table>
+</td></tr>
+
+<!-- CTA -->
+<tr><td style="padding:22px 38px;text-align:center;border-bottom:2px solid #c8b882;">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:Georgia,serif;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#7a6a4a;margin-bottom:3px;">Your Imperial Counsel</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;text-transform:uppercase;color:#1a1208;letter-spacing:.08em;">${ex(ctaLabel)}</div>
+    <div style="width:48px;height:1px;background-color:#b8973a;margin:5px auto 0;font-size:0;line-height:0;">&nbsp;</div>
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border:2px solid #c8b882;background-color:#ede5d5;">
+    <tr><td style="padding:20px 26px;text-align:center;">
+      <div style="font-family:Georgia,serif;font-size:13px;color:#2a1e0a;margin-bottom:14px;line-height:1.65;">${nlp(ctaText)}</div>
+      <a href="${ex(ctaUrl)}" style="display:inline-block;background-color:#3d5a3e;color:#f5f0e8;font-family:Georgia,serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;padding:11px 28px;text-decoration:none;border:0;">${ex(ctaBtn)}</a>
+    </td></tr>
+  </table>
+</td></tr>
+
+<!-- FOOTER DIVIDER -->
+<tr><td style="padding:14px 38px 0;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+    <tr>
+      <td style="height:1px;background-color:#c8b882;font-size:0;line-height:0;">&nbsp;</td>
+      <td width="24" style="text-align:center;font-size:12px;color:#b8973a;padding:0 4px;">&#9670;</td>
+      <td style="height:1px;background-color:#c8b882;font-size:0;line-height:0;">&nbsp;</td>
+    </tr>
+  </table>
+</td></tr>
+
+<!-- FOOTER -->
+<tr><td style="background-color:#f5f0e8;">
+  <div style="font-family:Georgia,serif;font-size:20px;font-style:italic;font-weight:400;line-height:1.35;color:#1a1208;text-align:center;padding:18px 48px 4px;">${ex(footClose)}</div>
+  <div style="font-family:Georgia,serif;font-size:9px;letter-spacing:.35em;text-transform:uppercase;color:#b8973a;text-align:center;margin-bottom:14px;">${ex(footDecree)}</div>
+  <div style="width:100%;height:1px;background-color:#c8b882;font-size:0;line-height:0;">&nbsp;</div>
+  <div style="text-align:center;padding:14px 38px 5px;">
+    <div style="font-family:Georgia,serif;font-size:19px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1a1208;margin-bottom:3px;">${ex(footBrand)}</div>
+    <div style="font-family:Georgia,serif;font-size:13px;font-style:italic;color:#2a1e0a;">${ex(footDesc)}</div>
+  </div>
+  <div style="text-align:center;padding:9px 38px 4px;">
+    <a href="${ex(l1url)}" style="font-family:Georgia,serif;font-size:12px;letter-spacing:.08em;color:#2a1e0a;text-decoration:none;margin:0 12px;">${ex(l1lbl)}</a>
+    <a href="${ex(l2url)}" style="font-family:Georgia,serif;font-size:12px;letter-spacing:.08em;color:#2a1e0a;text-decoration:none;margin:0 12px;">${ex(l2lbl)}</a>
+    <a href="${ex(l3url)}" style="font-family:Georgia,serif;font-size:12px;letter-spacing:.08em;color:#2a1e0a;text-decoration:none;margin:0 12px;">${ex(l3lbl)}</a>
+  </div>
+  <div style="width:130px;height:1px;background-color:#c8b882;margin:7px auto 9px;font-size:0;line-height:0;">&nbsp;</div>
+  <div style="font-family:Georgia,serif;font-size:11px;color:#7a6a4a;text-align:center;line-height:1.6;padding:0 48px 5px;">${ex(unsubNote)}</div>
+  <div style="text-align:center;padding-bottom:18px;"><a href="${ex(unsubUrl)}" style="font-family:Georgia,serif;font-size:11px;color:#7a6a4a;letter-spacing:.1em;text-decoration:underline;">${ex(unsubLbl)}</a></div>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+
+</body>
+</html>`;
+    }
+
+    window.addEventListener('message', function(event) {
+      if (!event.data || event.data.type !== 'GET_EXPORT_HTML') return;
+      try {
+        var html = buildEmailSafeHTML();
+        var subject = e('pub-name') || 'The Vovance Imperial Gazette';
+        event.source.postMessage(
+          { type: 'EXPORT_HTML', html: html, subject: subject },
+          event.origin || '*'
+        );
+      } catch(err) {
+        event.source.postMessage(
+          { type: 'EXPORT_HTML_ERROR', error: err.message },
+          event.origin || '*'
+        );
+      }
+    });
+
+  </script>
+</body>
+
+</html>

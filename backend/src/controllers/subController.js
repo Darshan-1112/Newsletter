@@ -27,9 +27,7 @@ const getSubscribers = async (req, res) => {
 
 const createSubscriber = async (req, res) => {
     try {
-         
         const { email, group_name } = req.body;
-       
         if (!email || !group_name) return res.status(400).json({ message: 'Email and Group Name is required' });
         
         await subService.addSubscriber(email, group_name);
@@ -51,24 +49,18 @@ const deleteSubscriber = async (req, res) => {
 
 const sendBulkBroadcast = async (req, res) => {
     try {
-        const { subject } = req.body;
+        const { subject, htmlContent } = req.body;
         
-        // Controller calls the service, which handles fetching and sending
-        const result = await emailService.sendImperialGazette(subject);
+        // Pass both subject AND the custom HTML from the editor
+        const result = await emailService.sendImperialGazette(subject, htmlContent);
 
         res.status(200).json({ 
-            message: `Gazette successfully sent to subscribers!`,
+            message: `Gazette successfully dispatched to all subscribers!`,
             messageId: result.messageId
         });
     } catch (error) {
-        // Errors from the Service or Model will be caught here
         res.status(500).json({ message: error.message });
     }
-};
-
-module.exports = { 
-    // ... existing functions,
-    sendBulkBroadcast 
 };
 
 module.exports = { sendBulkBroadcast, getSubscribers, createSubscriber, deleteSubscriber };
