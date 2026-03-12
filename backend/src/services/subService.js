@@ -1,15 +1,10 @@
 const Subscriber = require('../models/subModel');
 
-// const fetchAllSubscribers = async () => {
-//     return await Subscriber.getAll();
-// };
 const fetchPaginatedSubscribers = async (search, limit, offset) => {
     return await Subscriber.getPaginated(search, limit, offset);
 };
 
-
 const addSubscriber = async (email, group_name) => {
-    // Check if subscriber already exists
     const existing = await Subscriber.findByEmail(email);
     if (existing) {
         throw new Error('Subscriber already exists with this email');
@@ -25,4 +20,17 @@ const removeSubscriber = async (id) => {
     return true;
 };
 
-module.exports = { fetchPaginatedSubscribers, addSubscriber, removeSubscriber };
+// Called when subscriber clicks unsubscribe link in email
+const removeSubscriberByEmail = async (email) => {
+    const existing = await Subscriber.findByEmail(email);
+    if (!existing) {
+        throw new Error('Email not found');
+    }
+    const affectedRows = await Subscriber.delete(existing.id);
+    if (affectedRows === 0) {
+        throw new Error('Could not remove subscriber');
+    }
+    return true;
+};
+
+module.exports = { fetchPaginatedSubscribers, addSubscriber, removeSubscriber, removeSubscriberByEmail };

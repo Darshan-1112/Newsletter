@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { getSubscribers, createSubscriber, deleteSubscriber, sendBulkBroadcast } = require('../controllers/subController');
+const { getSubscribers, createSubscriber, deleteSubscriber, sendBulkBroadcast, unsubscribeByEmail } = require('../controllers/subController');
 const { protect } = require('../middleware/authMiddleware');
 
-// All routes here are protected
+// PUBLIC — no login needed (subscriber clicks from their email)
+router.get('/unsubscribe', unsubscribeByEmail);
+
+// Protected routes (admin only)
 router.get('/', protect, getSubscribers);
 router.post('/', protect, createSubscriber);
 router.delete('/:id', protect, deleteSubscriber);

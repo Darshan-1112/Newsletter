@@ -12,30 +12,32 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendImperialGazette = async (subject, htmlContent) => {
-    // 1. Fetch all subscribers
     const subscribers = await Subscriber.getAll();
 
-    // 2. Extract emails
-    const emailList = subscribers.map(sub => sub.email);
-
-    if (emailList.length === 0) {
+    if (subscribers.length === 0) {
         throw new Error("No subscribers found in database.");
     }
-
-    // 3. htmlContent MUST come from the editor (live rendered template).
-    //    We never fall back to any static file — what you edit = what gets sent.
     if (!htmlContent) {
         throw new Error("No email content provided. Please compose your gazette in the editor before sending.");
     }
 
-    const mailOptions = {
-        from: `"The Imperial Court" <${process.env.SMTP_USER}>`,
-        bcc: emailList,
-        subject: subject || "The Vovance Imperial Gazette",
-        html: htmlContent,
-    };
+    // Send to every subscriber — each gets their own unique unsubscribe link
+    // {{EMAIL}} in the HTML is replaced with each subscriber's actual email address
+    for (const subscriber of subscribers) {
+        const personalizedHtml = htmlContent.replace(
+            /\{\{EMAIL\}\}/g,
+            encodeURIComponent(subscriber.email)
+        );
 
-    return await transporter.sendMail(mailOptions);
+        await transporter.sendMail({
+            from: `"The Imperial Court" <${process.env.SMTP_USER}>`,
+            to: subscriber.email,
+            subject: subject || "The Vovance Imperial Gazette",
+            html: personalizedHtml,
+        });
+    }
+
+    return { sent: subscribers.length };
 };
 
 module.exports = { sendImperialGazette };

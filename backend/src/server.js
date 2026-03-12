@@ -14,7 +14,7 @@ app.use(cookieParser()); // Required to read cookies
 
 // CORS Configuration (Critical for Cookies)
 app.use(cors({
-    origin: 'http://localhost:3000', // Your Next.js URL
+    origin: 'http://localhost:3001', // Your Next.js URL
     credentials: true // Allows cookies to be sent back and forth
 }));
 
